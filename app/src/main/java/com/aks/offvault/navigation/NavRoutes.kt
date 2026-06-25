@@ -14,4 +14,12 @@ object NavRoutes {
     const val EDIT_CARD = "cards/edit/{cardId}"
     fun viewCard(cardId: Long) = "cards/view/$cardId"
     fun editCard(cardId: Long) = "cards/edit/$cardId"
+
+    // Documents
+    const val DOCUMENTS = "documents"
+    const val ADD_DOCUMENT = "documents/add"
+    const val VIEW_DOCUMENT = "documents/view/{documentId}"
+    const val EDIT_DOCUMENT = "documents/edit/{documentId}"
+    fun viewDocument(documentId: Long) = "documents/view/$documentId"
+    fun editDocument(documentId: Long) = "documents/edit/$documentId"
 }

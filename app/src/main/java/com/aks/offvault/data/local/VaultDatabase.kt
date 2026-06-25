@@ -6,12 +6,14 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.aks.offvault.data.model.Card
+import com.aks.offvault.data.model.Document
 
-@Database(entities = [Card::class], version = 2, exportSchema = false)
+@Database(entities = [Card::class, Document::class], version = 3, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class VaultDatabase : RoomDatabase() {
 
     abstract fun cardDao(): CardDao
+    abstract fun documentDao(): DocumentDao
 
     companion object {
         @Volatile
