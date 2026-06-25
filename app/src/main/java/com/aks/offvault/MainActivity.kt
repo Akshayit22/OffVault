@@ -22,6 +22,9 @@ class MainActivity : FragmentActivity() {
     private val homeViewModel: HomeViewModel by viewModels()
     private lateinit var biometricAuthManager: BiometricAuthManager
 
+    // Timestamp of when the app was last sent to background; 0 means not yet backgrounded.
+    private var backgroundedAt: Long = 0L
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -54,10 +57,21 @@ class MainActivity : FragmentActivity() {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        // Re-lock the vault whenever the app loses focus
-        lockViewModel.lock()
+    override fun onStop() {
+        super.onStop()
+        backgroundedAt = System.currentTimeMillis()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Lock only if the app was in the background for longer than the timeout.
+        // backgroundedAt == 0 means first launch — LockViewModel already starts locked.
+        if (backgroundedAt > 0L &&
+            System.currentTimeMillis() - backgroundedAt >= LOCK_TIMEOUT_MS
+        ) {
+            lockViewModel.lock()
+        }
+        backgroundedAt = 0L
     }
 
     private fun triggerAuth() {
@@ -66,5 +80,9 @@ class MainActivity : FragmentActivity() {
             onError = { message -> lockViewModel.onAuthError(message) },
             onFailed = { /* OS already shows per-attempt feedback in the biometric dialog */ }
         )
+    }
+
+    companion object {
+        private const val LOCK_TIMEOUT_MS = 30_000L
     }
 }
