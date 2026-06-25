@@ -9,6 +9,10 @@ import com.aks.offvault.ui.cards.AddEditCardScreen
 import com.aks.offvault.ui.cards.CardListScreen
 import com.aks.offvault.ui.cards.CardViewModel
 import com.aks.offvault.ui.cards.ViewCardScreen
+import com.aks.offvault.ui.documents.AddEditDocumentScreen
+import com.aks.offvault.ui.documents.DocumentListScreen
+import com.aks.offvault.ui.documents.DocumentViewModel
+import com.aks.offvault.ui.documents.ViewDocumentScreen
 import com.aks.offvault.ui.home.HomeScreen
 import com.aks.offvault.ui.home.HomeViewModel
 import com.aks.offvault.ui.section.SectionListScreen
@@ -20,6 +24,7 @@ fun VaultNavGraph(
 ) {
     val navController = rememberNavController()
     val cardViewModel: CardViewModel = viewModel()
+    val documentViewModel: DocumentViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -33,6 +38,7 @@ fun VaultNavGraph(
                 onSectionClick = { section ->
                     when (section.id) {
                         "cards" -> navController.navigate(NavRoutes.CARDS)
+                        "documents" -> navController.navigate(NavRoutes.DOCUMENTS)
                         else -> navController.navigate(NavRoutes.section(section.id))
                     }
                 },
@@ -90,6 +96,50 @@ fun VaultNavGraph(
                 onSaved = {
                     // Pop edit screen AND view screen, land back on the card list
                     navController.popBackStack(NavRoutes.CARDS, inclusive = false)
+                },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        // ── Documents ───────────────────────────────────────────────────────
+        composable(NavRoutes.DOCUMENTS) {
+            DocumentListScreen(
+                viewModel = documentViewModel,
+                onDocumentClick = { doc -> navController.navigate(NavRoutes.viewDocument(doc.id)) },
+                onAddClick = { navController.navigate(NavRoutes.ADD_DOCUMENT) },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(NavRoutes.ADD_DOCUMENT) {
+            AddEditDocumentScreen(
+                viewModel = documentViewModel,
+                editDocumentId = null,
+                onSaved = { navController.popBackStack() },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(NavRoutes.VIEW_DOCUMENT) { backStackEntry ->
+            val docId = backStackEntry.arguments?.getString("documentId")?.toLongOrNull()
+                ?: return@composable
+            ViewDocumentScreen(
+                viewModel = documentViewModel,
+                documentId = docId,
+                onEditClick = { navController.navigate(NavRoutes.editDocument(docId)) },
+                onDeleted = { navController.popBackStack() },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(NavRoutes.EDIT_DOCUMENT) { backStackEntry ->
+            val docId = backStackEntry.arguments?.getString("documentId")?.toLongOrNull()
+                ?: return@composable
+            AddEditDocumentScreen(
+                viewModel = documentViewModel,
+                editDocumentId = docId,
+                onSaved = {
+                    navController.popBackStack(NavRoutes.DOCUMENTS, inclusive = false)
                 },
                 onBackClick = { navController.popBackStack() }
             )
