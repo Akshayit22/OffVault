@@ -10,13 +10,9 @@ import com.aks.offvault.ui.theme.SectionBlue
 import com.aks.offvault.ui.theme.SectionOrange
 import com.aks.offvault.ui.theme.SectionPurple
 import com.aks.offvault.ui.theme.SectionTeal
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 
 class HomeViewModel : ViewModel() {
 
-    // Add more SectionItems here to extend the home screen with new sections
     val sections: List<SectionItem> = listOf(
         SectionItem(
             id = "cards",
@@ -47,11 +43,4 @@ class HomeViewModel : ViewModel() {
             accentColor = SectionOrange
         )
     )
-
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
-
-    fun onSearchQueryChanged(query: String) {
-        _searchQuery.value = query
-    }
 }
