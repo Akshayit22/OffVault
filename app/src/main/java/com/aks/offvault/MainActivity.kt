@@ -6,25 +6,21 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.fragment.app.FragmentActivity
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import com.aks.offvault.auth.AuthState
 import com.aks.offvault.auth.BiometricAuthManager
 import com.aks.offvault.auth.LockViewModel
+import com.aks.offvault.ui.home.HomeScreen
+import com.aks.offvault.ui.home.HomeViewModel
+import com.aks.offvault.ui.home.SectionItem
 import com.aks.offvault.ui.lock.LockScreen
 import com.aks.offvault.ui.theme.OffVaultTheme
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 
 class MainActivity : FragmentActivity() {
 
     private val lockViewModel: LockViewModel by viewModels()
+    private val homeViewModel: HomeViewModel by viewModels()
     private lateinit var biometricAuthManager: BiometricAuthManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,20 +38,13 @@ class MainActivity : FragmentActivity() {
 
                 when (authState) {
                     is AuthState.Authenticated -> {
-                        // Phase 1 placeholder — Home screen will replace this
-                        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(innerPadding),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "Welcome to OffVault",
-                                    style = MaterialTheme.typography.headlineMedium
-                                )
-                            }
-                        }
+                        HomeScreen(
+                            viewModel = homeViewModel,
+                            onSectionClick = { _: SectionItem ->
+                                // Navigation to section detail screens — coming in next feature
+                            },
+                            onLockClick = { lockViewModel.lock() }
+                        )
                     }
 
                     else -> {
@@ -71,7 +60,7 @@ class MainActivity : FragmentActivity() {
 
     override fun onPause() {
         super.onPause()
-        // Re-lock the vault whenever the app loses focus (home button, notification shade, etc.)
+        // Re-lock the vault whenever the app loses focus
         lockViewModel.lock()
     }
 

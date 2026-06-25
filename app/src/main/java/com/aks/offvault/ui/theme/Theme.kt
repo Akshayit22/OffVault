@@ -1,54 +1,48 @@
 package com.aks.offvault.ui.theme
 
-import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = VaultAccentBlue,
+    onPrimary = Color(0xFF003549),
+    primaryContainer = Color(0xFF004D6F),
+    onPrimaryContainer = Color(0xFFBDE9FF),
+    background = VaultNavyDark,
+    onBackground = Color.White,
+    surface = VaultNavyMedium,
+    onSurface = Color.White,
+    surfaceVariant = VaultNavySurface,
+    onSurfaceVariant = VaultSubtitle,
+    outline = VaultHint
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
+    primary = Color(0xFF006494),
     onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    primaryContainer = Color(0xFFBDE9FF),
+    onPrimaryContainer = Color(0xFF001E2C),
+    background = Color(0xFFF6FAFE),
+    onBackground = Color(0xFF191C1E),
+    surface = Color(0xFFF6FAFE),
+    onSurface = Color(0xFF191C1E),
+    surfaceVariant = Color(0xFFDCE4EC),
+    onSurfaceVariant = Color(0xFF40484F),
+    outline = Color(0xFF70787F)
 )
 
 @Composable
 fun OffVaultTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    // Dynamic color deliberately disabled — vault requires a consistent secure aesthetic
+    // regardless of device wallpaper or system accent colour.
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
     MaterialTheme(
         colorScheme = colorScheme,
