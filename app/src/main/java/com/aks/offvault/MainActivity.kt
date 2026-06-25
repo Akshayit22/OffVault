@@ -6,16 +6,15 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.fragment.app.FragmentActivity
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import com.aks.offvault.auth.AuthState
 import com.aks.offvault.auth.BiometricAuthManager
 import com.aks.offvault.auth.LockViewModel
-import com.aks.offvault.ui.home.HomeScreen
+import com.aks.offvault.navigation.VaultNavGraph
 import com.aks.offvault.ui.home.HomeViewModel
-import com.aks.offvault.ui.home.SectionItem
 import com.aks.offvault.ui.lock.LockScreen
 import com.aks.offvault.ui.theme.OffVaultTheme
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 
 class MainActivity : FragmentActivity() {
 
@@ -38,11 +37,8 @@ class MainActivity : FragmentActivity() {
 
                 when (authState) {
                     is AuthState.Authenticated -> {
-                        HomeScreen(
-                            viewModel = homeViewModel,
-                            onSectionClick = { _: SectionItem ->
-                                // Navigation to section detail screens — coming in next feature
-                            },
+                        VaultNavGraph(
+                            homeViewModel = homeViewModel,
                             onLockClick = { lockViewModel.lock() }
                         )
                     }
