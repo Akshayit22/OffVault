@@ -2,10 +2,18 @@ package com.aks.offvault.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// OffVault vault palette
+val VaultNavyDark = Color(0xFF0A1628)
+val VaultNavyMedium = Color(0xFF0F2040)
+val VaultNavySurface = Color(0xFF14253D)
+val VaultNavyVariant = Color(0xFF1E3050)
+val VaultAccentBlue = Color(0xFF4FC3F7)
+val VaultAccentBlueDim = Color(0xFF1A3A6B)
+val VaultSubtitle = Color(0xFFB0BEC5)
+val VaultHint = Color(0xFF607D8B)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// Section accent colours
+val SectionBlue = Color(0xFF1A73E8)
+val SectionTeal = Color(0xFF00897B)
+val SectionPurple = Color(0xFF8E24AA)
+val SectionOrange = Color(0xFFE65100)
