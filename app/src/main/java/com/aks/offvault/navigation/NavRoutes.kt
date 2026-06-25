@@ -22,4 +22,20 @@ object NavRoutes {
     const val EDIT_DOCUMENT = "documents/edit/{documentId}"
     fun viewDocument(documentId: Long) = "documents/view/$documentId"
     fun editDocument(documentId: Long) = "documents/edit/$documentId"
+
+    // Logins
+    const val LOGINS = "logins"
+    const val ADD_LOGIN = "logins/add"
+    const val VIEW_LOGIN = "logins/view/{loginId}"
+    const val EDIT_LOGIN = "logins/edit/{loginId}"
+    fun viewLogin(loginId: Long) = "logins/view/$loginId"
+    fun editLogin(loginId: Long) = "logins/edit/$loginId"
+
+    // Others
+    const val OTHERS = "others"
+    const val ADD_OTHER = "others/add"
+    const val VIEW_OTHER = "others/view/{otherId}"
+    const val EDIT_OTHER = "others/edit/{otherId}"
+    fun viewOther(otherId: Long) = "others/view/$otherId"
+    fun editOther(otherId: Long) = "others/edit/$otherId"
 }

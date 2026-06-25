@@ -15,6 +15,14 @@ import com.aks.offvault.ui.documents.DocumentViewModel
 import com.aks.offvault.ui.documents.ViewDocumentScreen
 import com.aks.offvault.ui.home.HomeScreen
 import com.aks.offvault.ui.home.HomeViewModel
+import com.aks.offvault.ui.logins.AddEditLoginDetailScreen
+import com.aks.offvault.ui.logins.LoginDetailListScreen
+import com.aks.offvault.ui.logins.LoginDetailViewModel
+import com.aks.offvault.ui.logins.ViewLoginDetailScreen
+import com.aks.offvault.ui.others.AddEditOtherScreen
+import com.aks.offvault.ui.others.OtherListScreen
+import com.aks.offvault.ui.others.OtherViewModel
+import com.aks.offvault.ui.others.ViewOtherScreen
 import com.aks.offvault.ui.section.SectionListScreen
 
 @Composable
@@ -25,6 +33,8 @@ fun VaultNavGraph(
     val navController = rememberNavController()
     val cardViewModel: CardViewModel = viewModel()
     val documentViewModel: DocumentViewModel = viewModel()
+    val loginDetailViewModel: LoginDetailViewModel = viewModel()
+    val otherViewModel: OtherViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -39,6 +49,8 @@ fun VaultNavGraph(
                     when (section.id) {
                         "cards" -> navController.navigate(NavRoutes.CARDS)
                         "documents" -> navController.navigate(NavRoutes.DOCUMENTS)
+                        "logins" -> navController.navigate(NavRoutes.LOGINS)
+                        "others" -> navController.navigate(NavRoutes.OTHERS)
                         else -> navController.navigate(NavRoutes.section(section.id))
                     }
                 },
@@ -140,6 +152,94 @@ fun VaultNavGraph(
                 editDocumentId = docId,
                 onSaved = {
                     navController.popBackStack(NavRoutes.DOCUMENTS, inclusive = false)
+                },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        // ── Logins ──────────────────────────────────────────────────────────
+        composable(NavRoutes.LOGINS) {
+            LoginDetailListScreen(
+                viewModel = loginDetailViewModel,
+                onLoginDetailClick = { login -> navController.navigate(NavRoutes.viewLogin(login.id)) },
+                onAddClick = { navController.navigate(NavRoutes.ADD_LOGIN) },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(NavRoutes.ADD_LOGIN) {
+            AddEditLoginDetailScreen(
+                viewModel = loginDetailViewModel,
+                editLoginDetailId = null,
+                onSaved = { navController.popBackStack() },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(NavRoutes.VIEW_LOGIN) { backStackEntry ->
+            val loginId = backStackEntry.arguments?.getString("loginId")?.toLongOrNull()
+                ?: return@composable
+            ViewLoginDetailScreen(
+                viewModel = loginDetailViewModel,
+                loginDetailId = loginId,
+                onEditClick = { navController.navigate(NavRoutes.editLogin(loginId)) },
+                onDeleted = { navController.popBackStack() },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(NavRoutes.EDIT_LOGIN) { backStackEntry ->
+            val loginId = backStackEntry.arguments?.getString("loginId")?.toLongOrNull()
+                ?: return@composable
+            AddEditLoginDetailScreen(
+                viewModel = loginDetailViewModel,
+                editLoginDetailId = loginId,
+                onSaved = {
+                    navController.popBackStack(NavRoutes.LOGINS, inclusive = false)
+                },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        // ── Others ──────────────────────────────────────────────────────────
+        composable(NavRoutes.OTHERS) {
+            OtherListScreen(
+                viewModel = otherViewModel,
+                onOtherClick = { other -> navController.navigate(NavRoutes.viewOther(other.id)) },
+                onAddClick = { navController.navigate(NavRoutes.ADD_OTHER) },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(NavRoutes.ADD_OTHER) {
+            AddEditOtherScreen(
+                viewModel = otherViewModel,
+                editOtherId = null,
+                onSaved = { navController.popBackStack() },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(NavRoutes.VIEW_OTHER) { backStackEntry ->
+            val otherId = backStackEntry.arguments?.getString("otherId")?.toLongOrNull()
+                ?: return@composable
+            ViewOtherScreen(
+                viewModel = otherViewModel,
+                otherId = otherId,
+                onEditClick = { navController.navigate(NavRoutes.editOther(otherId)) },
+                onDeleted = { navController.popBackStack() },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(NavRoutes.EDIT_OTHER) { backStackEntry ->
+            val otherId = backStackEntry.arguments?.getString("otherId")?.toLongOrNull()
+                ?: return@composable
+            AddEditOtherScreen(
+                viewModel = otherViewModel,
+                editOtherId = otherId,
+                onSaved = {
+                    navController.popBackStack(NavRoutes.OTHERS, inclusive = false)
                 },
                 onBackClick = { navController.popBackStack() }
             )
