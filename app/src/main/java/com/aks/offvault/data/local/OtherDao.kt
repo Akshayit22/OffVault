@@ -26,4 +26,7 @@ interface OtherDao {
 
     @Delete
     suspend fun deleteOther(other: Other)
+
+    @Query("DELETE FROM others")
+    suspend fun deleteAll()
 }
