@@ -21,6 +21,7 @@ import com.aks.offvault.ui.documents.DocumentViewModel
 import com.aks.offvault.ui.documents.ViewDocumentScreen
 import com.aks.offvault.ui.about.AboutScreen
 import com.aks.offvault.ui.data.DataScreen
+import com.aks.offvault.ui.data.DataViewModel
 import com.aks.offvault.ui.home.HomeScreen
 import com.aks.offvault.ui.home.HomeViewModel
 import com.aks.offvault.ui.logins.AddEditLoginDetailScreen
@@ -43,6 +44,7 @@ fun VaultNavGraph(
     val documentViewModel: DocumentViewModel = viewModel()
     val loginDetailViewModel: LoginDetailViewModel = viewModel()
     val otherViewModel: OtherViewModel = viewModel()
+    val dataViewModel: DataViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -86,7 +88,10 @@ fun VaultNavGraph(
 
         // ── Data ─────────────────────────────────────────────────────────────
         composable(NavRoutes.DATA) {
-            DataScreen(onBackClick = { navController.popBackStack() })
+            DataScreen(
+                viewModel = dataViewModel,
+                onBackClick = { navController.popBackStack() }
+            )
         }
 
         // ── About ────────────────────────────────────────────────────────────
