@@ -38,4 +38,8 @@ object NavRoutes {
     const val EDIT_OTHER = "others/edit/{otherId}"
     fun viewOther(otherId: Long) = "others/view/$otherId"
     fun editOther(otherId: Long) = "others/edit/$otherId"
+
+    // Menu screens
+    const val DATA = "data"
+    const val ABOUT = "about"
 }

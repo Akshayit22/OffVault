@@ -19,6 +19,8 @@ import com.aks.offvault.ui.documents.AddEditDocumentScreen
 import com.aks.offvault.ui.documents.DocumentListScreen
 import com.aks.offvault.ui.documents.DocumentViewModel
 import com.aks.offvault.ui.documents.ViewDocumentScreen
+import com.aks.offvault.ui.about.AboutScreen
+import com.aks.offvault.ui.data.DataScreen
 import com.aks.offvault.ui.home.HomeScreen
 import com.aks.offvault.ui.home.HomeViewModel
 import com.aks.offvault.ui.logins.AddEditLoginDetailScreen
@@ -76,8 +78,20 @@ fun VaultNavGraph(
                         else -> navController.navigate(NavRoutes.section(section.id))
                     }
                 },
-                onLockClick = onLockClick
+                onLockClick = onLockClick,
+                onDataClick = { navController.navigate(NavRoutes.DATA) },
+                onAboutClick = { navController.navigate(NavRoutes.ABOUT) }
             )
+        }
+
+        // ── Data ─────────────────────────────────────────────────────────────
+        composable(NavRoutes.DATA) {
+            DataScreen(onBackClick = { navController.popBackStack() })
+        }
+
+        // ── About ────────────────────────────────────────────────────────────
+        composable(NavRoutes.ABOUT) {
+            AboutScreen(onBackClick = { navController.popBackStack() })
         }
 
         // ── Generic section placeholder ─────────────────────────────────────
