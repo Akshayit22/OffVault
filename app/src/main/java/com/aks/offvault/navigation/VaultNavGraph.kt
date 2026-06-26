@@ -1,12 +1,13 @@
 package com.aks.offvault.navigation
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.background
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -49,22 +50,11 @@ fun VaultNavGraph(
     NavHost(
         navController = navController,
         startDestination = NavRoutes.HOME,
-        enterTransition = {
-            slideInHorizontally(tween(300, easing = FastOutSlowInEasing)) { it / 3 } +
-                    fadeIn(tween(300))
-        },
-        exitTransition = {
-            slideOutHorizontally(tween(300, easing = FastOutSlowInEasing)) { -it / 3 } +
-                    fadeOut(tween(150))
-        },
-        popEnterTransition = {
-            slideInHorizontally(tween(300, easing = FastOutSlowInEasing)) { -it / 3 } +
-                    fadeIn(tween(300))
-        },
-        popExitTransition = {
-            slideOutHorizontally(tween(300, easing = FastOutSlowInEasing)) { it / 3 } +
-                    fadeOut(tween(150))
-        }
+        modifier = Modifier.background(MaterialTheme.colorScheme.background),
+        enterTransition = { slideInHorizontally { it } + fadeIn() },
+        exitTransition = { slideOutHorizontally { -it } + fadeOut() },
+        popEnterTransition = { slideInHorizontally { -it } + fadeIn() },
+        popExitTransition = { slideOutHorizontally { it } + fadeOut() }
     ) {
 
         // ── Home ────────────────────────────────────────────────────────────

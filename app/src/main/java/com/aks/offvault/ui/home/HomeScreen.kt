@@ -96,7 +96,9 @@ fun HomeScreen(
                         }
                         DropdownMenu(
                             expanded = menuExpanded,
-                            onDismissRequest = { menuExpanded = false }
+                            onDismissRequest = { menuExpanded = false },
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            shadowElevation = 4.dp
                         ) {
                             DropdownMenuItem(
                                 text = { Text("Data") },
