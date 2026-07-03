@@ -11,17 +11,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.Visibility
-import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.outlined.VpnKey
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,11 +32,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -47,14 +42,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.aks.offvault.ui.components.CopyableDetailRow
+import com.aks.offvault.ui.components.IconTile
+import com.aks.offvault.ui.components.PlainDetailRow
+import com.aks.offvault.ui.components.SensitiveDetailRow
+import com.aks.offvault.ui.components.StrengthMeter
+import com.aks.offvault.ui.components.VaultCard
+import com.aks.offvault.ui.components.calculatePasswordStrength
+import com.aks.offvault.ui.components.copyWithAutoClear
 import com.aks.offvault.ui.theme.SectionPurple
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.aks.offvault.ui.theme.VaultBackground
+import com.aks.offvault.ui.theme.VaultSurfaceBorder
+import com.aks.offvault.ui.theme.VaultTextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,6 +70,8 @@ fun ViewLoginDetailScreen(
     val login by viewModel.getLoginDetailFlow(loginDetailId).collectAsState(initial = null)
     var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
+    val clipboardManager = LocalClipboardManager.current
+    val scope = rememberCoroutineScope()
 
     if (showDeleteDialog) {
         AlertDialog(
@@ -91,11 +95,7 @@ fun ViewLoginDetailScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = login?.title ?: "Login",
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1
-                    )
+                    Text(text = login?.title ?: "Login", fontWeight = FontWeight.Bold, maxLines = 1)
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
@@ -114,14 +114,14 @@ fun ViewLoginDetailScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = VaultBackground)
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = VaultBackground
     ) { innerPadding ->
         login?.let { l ->
+            val strength = calculatePasswordStrength(l.password)
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -130,58 +130,53 @@ fun ViewLoginDetailScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Header banner
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(SectionPurple.copy(alpha = 0.12f))
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            Icons.Outlined.VpnKey,
-                            contentDescription = null,
-                            tint = SectionPurple,
-                            modifier = Modifier.size(48.dp)
-                        )
-                        Spacer(Modifier.height(8.dp))
+                // Header card with key icon tile + title
+                VaultCard {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconTile(icon = Icons.Outlined.VpnKey, tint = SectionPurple, size = 56.dp, iconSize = 28.dp)
+                        Spacer(Modifier.width(16.dp))
                         Text(
                             text = l.title,
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp,
-                            textAlign = TextAlign.Center
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
 
                 // Details card
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .padding(vertical = 4.dp)
-                ) {
-                    // Username — always visible, always copyable
-                    CopyableRow(
+                VaultCard {
+                    CopyableDetailRow(
                         label = "Username",
-                        value = l.username
+                        value = l.username,
+                        onCopy = { copyWithAutoClear(clipboardManager, scope, l.username) }
                     )
 
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                    HorizontalDivider(color = VaultSurfaceBorder)
 
-                    // Password — hidden until revealed; copyable at all times
-                    PasswordRow(
-                        password = l.password,
+                    SensitiveDetailRow(
+                        label = "Password",
+                        visibleValue = l.password,
                         isVisible = passwordVisible,
-                        onToggleVisibility = { passwordVisible = !passwordVisible }
+                        onToggle = { passwordVisible = !passwordVisible },
+                        onCopy = { copyWithAutoClear(clipboardManager, scope, l.password) }
                     )
+
+                    // Strength meter
+                    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+                        Spacer(Modifier.height(2.dp))
+                        StrengthMeter(strength = strength)
+                        Spacer(Modifier.height(10.dp))
+                    }
 
                     if (l.info.isNotBlank()) {
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-                        PlainRow(label = "Info", value = l.info)
+                        HorizontalDivider(color = VaultSurfaceBorder)
+                        PlainDetailRow(label = "Info", value = l.info)
                     }
                 }
             }
@@ -191,157 +186,7 @@ fun ViewLoginDetailScreen(
                 .padding(innerPadding),
             contentAlignment = Alignment.Center
         ) {
-            Text("Login not found", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Login not found", color = VaultTextSecondary)
         }
-    }
-}
-
-@Composable
-private fun CopyableRow(label: String, value: String) {
-    val clipboardManager = LocalClipboardManager.current
-    val scope = rememberCoroutineScope()
-    var justCopied by remember { mutableStateOf(false) }
-
-    LaunchedEffect(justCopied) {
-        if (justCopied) {
-            delay(2_000L)
-            justCopied = false
-        }
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(0.30f)
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(0.55f),
-            textAlign = TextAlign.Start
-        )
-        IconButton(
-            onClick = {
-                clipboardManager.setText(AnnotatedString(value))
-                justCopied = true
-                scope.launch {
-                    delay(30_000L)
-                    clipboardManager.setText(AnnotatedString(""))
-                }
-            },
-            modifier = Modifier.size(32.dp)
-        ) {
-            Icon(
-                imageVector = if (justCopied) Icons.Outlined.CheckCircle else Icons.Outlined.ContentCopy,
-                contentDescription = if (justCopied) "Copied" else "Copy",
-                modifier = Modifier.size(18.dp),
-                tint = if (justCopied) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-private fun PasswordRow(
-    password: String,
-    isVisible: Boolean,
-    onToggleVisibility: () -> Unit
-) {
-    val clipboardManager = LocalClipboardManager.current
-    val scope = rememberCoroutineScope()
-    var justCopied by remember { mutableStateOf(false) }
-
-    LaunchedEffect(justCopied) {
-        if (justCopied) {
-            delay(2_000L)
-            justCopied = false
-        }
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "Password",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(0.30f)
-        )
-        Text(
-            text = if (isVisible) password else "•".repeat(password.length.coerceAtMost(12)),
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-            letterSpacing = if (isVisible) 0.5.sp else 2.sp,
-            modifier = Modifier.weight(0.40f),
-            textAlign = TextAlign.Start
-        )
-        // Eye toggle
-        IconButton(
-            onClick = onToggleVisibility,
-            modifier = Modifier.size(32.dp)
-        ) {
-            Icon(
-                imageVector = if (isVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
-                contentDescription = if (isVisible) "Hide password" else "Show password",
-                modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        // Copy button
-        IconButton(
-            onClick = {
-                clipboardManager.setText(AnnotatedString(password))
-                justCopied = true
-                scope.launch {
-                    delay(30_000L)
-                    clipboardManager.setText(AnnotatedString(""))
-                }
-            },
-            modifier = Modifier.size(32.dp)
-        ) {
-            Icon(
-                imageVector = if (justCopied) Icons.Outlined.CheckCircle else Icons.Outlined.ContentCopy,
-                contentDescription = if (justCopied) "Copied" else "Copy password",
-                modifier = Modifier.size(18.dp),
-                tint = if (justCopied) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-private fun PlainRow(label: String, value: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.Top
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(0.30f)
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(0.70f),
-            textAlign = TextAlign.Start
-        )
     }
 }

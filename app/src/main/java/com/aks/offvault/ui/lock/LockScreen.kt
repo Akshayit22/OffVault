@@ -1,8 +1,15 @@
 package com.aks.offvault.ui.lock
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,11 +19,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fingerprint
-import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -37,13 +45,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.aks.offvault.auth.AuthState
 import com.aks.offvault.auth.LockViewModel
-
-private val BackgroundTop = Color(0xFF0A1628)
-private val BackgroundBottom = Color(0xFF0F2040)
-private val AccentBlue = Color(0xFF4FC3F7)
-private val AccentBlueButton = Color(0xFF1A3A6B)
-private val SubtitleGray = Color(0xFFB0BEC5)
-private val HintGray = Color(0xFF607D8B)
+import com.aks.offvault.ui.theme.VaultBackground
+import com.aks.offvault.ui.theme.VaultPrimary
+import com.aks.offvault.ui.theme.VaultPrimaryHover
+import com.aks.offvault.ui.theme.VaultTextMuted
+import com.aks.offvault.ui.theme.VaultTextSecondary
 
 @Composable
 fun LockScreen(
@@ -65,14 +71,31 @@ fun LockScreen(
         label = "fingerprintButtonScale"
     )
 
+    // Subtle pulsing glow behind the fingerprint button
+    val infiniteTransition = rememberInfiniteTransition(label = "fingerprintGlow")
+    val glowScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.22f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1600, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glowScale"
+    )
+    val glowAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 0.08f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1600, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glowAlpha"
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(BackgroundTop, BackgroundBottom)
-                )
-            ),
+            .background(VaultBackground),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -82,67 +105,98 @@ fun LockScreen(
                 .fillMaxSize()
                 .padding(32.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Lock,
-                contentDescription = null,
-                tint = AccentBlue,
-                modifier = Modifier.size(56.dp)
+            // Shield logo tile with blue gradient
+            Box(
+                modifier = Modifier
+                    .size(84.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(
+                        Brush.linearGradient(colors = listOf(VaultPrimary, VaultPrimaryHover))
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Shield,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(42.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "OffVault",
+                color = MaterialTheme.colorScheme.onBackground,
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.5.sp
             )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = "Your data, offline & encrypted",
+                color = VaultTextSecondary,
+                fontSize = 14.sp,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(72.dp))
+
+            // Pulsing glow + fingerprint button
+            Box(contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier
+                        .size(112.dp)
+                        .scale(glowScale)
+                        .clip(CircleShape)
+                        .background(VaultPrimary.copy(alpha = glowAlpha))
+                )
+                Box(
+                    modifier = Modifier
+                        .size(96.dp)
+                        .scale(buttonScale)
+                        .clip(CircleShape)
+                        .background(VaultPrimary.copy(alpha = 0.16f))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            buttonPressed = true
+                            onUnlockRequest()
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Fingerprint,
+                        contentDescription = "Unlock with fingerprint",
+                        tint = VaultPrimary,
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = "OffVault",
-                color = Color.White,
-                fontSize = 40.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Your secure personal vault",
-                color = SubtitleGray,
-                fontSize = 15.sp,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(64.dp))
-
-            Text(
-                text = "Vault is locked",
-                color = HintGray,
-                fontSize = 13.sp,
-                letterSpacing = 0.5.sp
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            IconButton(
-                onClick = {
-                    buttonPressed = true
-                    onUnlockRequest()
-                },
-                modifier = Modifier
-                    .size(88.dp)
-                    .scale(buttonScale)
-                    .background(AccentBlueButton, CircleShape)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Fingerprint,
-                    contentDescription = "Unlock with fingerprint",
-                    tint = AccentBlue,
-                    modifier = Modifier.size(52.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
                 text = "Tap to unlock",
-                color = HintGray,
+                color = VaultTextMuted,
                 fontSize = 13.sp
+            )
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            Text(
+                text = "Use PIN instead",
+                color = VaultPrimary,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onUnlockRequest
+                )
             )
 
             if (authState is AuthState.Error) {

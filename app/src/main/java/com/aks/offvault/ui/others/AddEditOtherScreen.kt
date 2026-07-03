@@ -1,5 +1,6 @@
 package com.aks.offvault.ui.others
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -13,13 +14,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -36,7 +36,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.aks.offvault.data.model.Other
+import com.aks.offvault.ui.components.VaultPrimaryButton
 import com.aks.offvault.ui.theme.SectionOrange
+import com.aks.offvault.ui.theme.VaultBackground
+import com.aks.offvault.ui.theme.VaultSurfaceBorder
+import com.aks.offvault.ui.theme.VaultTextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,6 +69,14 @@ fun AddEditOtherScreen(
 
     val isFormValid = title.isNotBlank()
 
+    val fieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = SectionOrange,
+        unfocusedBorderColor = VaultSurfaceBorder,
+        focusedContainerColor = MaterialTheme.colorScheme.surface,
+        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+        cursorColor = SectionOrange
+    )
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -79,19 +91,43 @@ fun AddEditOtherScreen(
                         Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = VaultBackground)
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        bottomBar = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(VaultBackground)
+                    .imePadding()
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+            ) {
+                VaultPrimaryButton(
+                    text = if (isEditMode) "Save Changes" else "Add Entry",
+                    enabled = isFormValid,
+                    containerColor = SectionOrange,
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        val other = Other(
+                            id = if (isEditMode) existingOther!!.id else 0,
+                            title = title.trim(),
+                            info = info.trim(),
+                            createdAt = if (isEditMode) existingOther!!.createdAt else System.currentTimeMillis(),
+                            updatedAt = System.currentTimeMillis()
+                        )
+                        if (isEditMode) viewModel.updateOther(other) else viewModel.insertOther(other)
+                        onSaved()
+                    }
+                )
+            }
+        },
+        containerColor = VaultBackground
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .imePadding()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -101,7 +137,8 @@ fun AddEditOtherScreen(
                 onValueChange = { title = it },
                 placeholder = { Text("e.g. Bank Account, WiFi Password") },
                 singleLine = true,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = fieldColors,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -112,38 +149,12 @@ fun AddEditOtherScreen(
                 placeholder = { Text("Details (optional)") },
                 minLines = 4,
                 maxLines = 10,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = fieldColors,
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(Modifier.height(8.dp))
-
-            Button(
-                onClick = {
-                    val other = Other(
-                        id = if (isEditMode) existingOther!!.id else 0,
-                        title = title.trim(),
-                        info = info.trim(),
-                        createdAt = if (isEditMode) existingOther!!.createdAt else System.currentTimeMillis(),
-                        updatedAt = System.currentTimeMillis()
-                    )
-                    if (isEditMode) viewModel.updateOther(other) else viewModel.insertOther(other)
-                    onSaved()
-                },
-                enabled = isFormValid,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = SectionOrange)
-            ) {
-                Text(
-                    text = if (isEditMode) "Save Changes" else "Add Entry",
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(88.dp))
         }
     }
 }
@@ -153,7 +164,7 @@ private fun FieldLabel(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = VaultTextSecondary,
         fontWeight = FontWeight.Medium
     )
 }

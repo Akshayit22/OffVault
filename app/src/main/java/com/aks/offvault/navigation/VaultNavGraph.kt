@@ -1,9 +1,10 @@
 package com.aks.offvault.navigation
 
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -51,10 +52,19 @@ fun VaultNavGraph(
         navController = navController,
         startDestination = NavRoutes.HOME,
         modifier = Modifier.background(MaterialTheme.colorScheme.background),
-        enterTransition = { slideInHorizontally { it } + fadeIn() },
-        exitTransition = { slideOutHorizontally { -it } + fadeOut() },
-        popEnterTransition = { slideInHorizontally { -it } + fadeIn() },
-        popExitTransition = { slideOutHorizontally { it } + fadeOut() }
+        // Subtle fade + slide-up transition between every screen in the vault.
+        enterTransition = {
+            slideInVertically(animationSpec = tween(240)) { it / 6 } + fadeIn(animationSpec = tween(240))
+        },
+        exitTransition = {
+            fadeOut(animationSpec = tween(180))
+        },
+        popEnterTransition = {
+            fadeIn(animationSpec = tween(200))
+        },
+        popExitTransition = {
+            slideOutVertically(animationSpec = tween(220)) { it / 6 } + fadeOut(animationSpec = tween(220))
+        }
     ) {
 
         // ── Home ────────────────────────────────────────────────────────────

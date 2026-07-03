@@ -4,24 +4,22 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.Visibility
-import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -34,30 +32,34 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.aks.offvault.data.model.Card
 import com.aks.offvault.data.model.CardType
+import com.aks.offvault.ui.components.CopyableDetailRow
+import com.aks.offvault.ui.components.PlainDetailRow
+import com.aks.offvault.ui.components.SensitiveDetailRow
+import com.aks.offvault.ui.components.VaultCard
+import com.aks.offvault.ui.components.copyWithAutoClear
 import com.aks.offvault.ui.theme.SectionBlue
+import com.aks.offvault.ui.theme.VaultBackground
+import com.aks.offvault.ui.theme.VaultMonoFontFamily
+import com.aks.offvault.ui.theme.VaultSurfaceBorder
+import com.aks.offvault.ui.theme.VaultTextSecondary
 
 /** Returns the card number formatted as XXXX XXXX XXXX XXXX. */
 private fun String.formatCardNumber() = chunked(4).joinToString(" ")
@@ -120,12 +122,10 @@ fun ViewCardScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = VaultBackground)
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = VaultBackground
     ) { innerPadding ->
         card?.let { c ->
             Column(
@@ -149,7 +149,7 @@ fun ViewCardScreen(
                 .padding(innerPadding),
             contentAlignment = Alignment.Center
         ) {
-            Text("Card not found", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Card not found", color = VaultTextSecondary)
         }
     }
 }
@@ -157,7 +157,7 @@ fun ViewCardScreen(
 @Composable
 private fun CardVisual(card: Card, cardNumberVisible: Boolean) {
     val gradient = Brush.linearGradient(
-        colors = listOf(Color(0xFF1A3A6B), SectionBlue.copy(alpha = 0.8f))
+        colors = listOf(Color(0xFF1E3A8A), SectionBlue)
     )
     val displayNumber = if (cardNumberVisible) {
         card.cardNumber.chunked(4).joinToString("  ")
@@ -168,56 +168,94 @@ private fun CardVisual(card: Card, cardNumberVisible: Boolean) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp)
-            .clip(RoundedCornerShape(20.dp))
+            .height(200.dp)
+            .clip(RoundedCornerShape(22.dp))
             .background(gradient)
-            .padding(20.dp)
+            .padding(22.dp)
     ) {
-        // Card type badge
-        Box(
+        // Top row: bank name + type chip
+        Row(
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .clip(RoundedCornerShape(6.dp))
-                .background(Color.White.copy(alpha = 0.15f))
-                .padding(horizontal = 8.dp, vertical = 4.dp)
+                .fillMaxWidth()
+                .align(Alignment.TopStart),
+            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween
         ) {
             Text(
-                text = if (card.cardType == CardType.DEBIT) "DEBIT" else "CREDIT",
-                color = Color.White,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
+                text = card.bankName.uppercase().ifBlank { "OFFVAULT" },
+                color = Color.White.copy(alpha = 0.85f),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 1.5.sp
             )
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(Color.White.copy(alpha = 0.18f))
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = if (card.cardType == CardType.DEBIT) "DEBIT" else "CREDIT",
+                    color = Color.White,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+            }
         }
 
-        // Bank name
-        Text(
-            text = card.bankName.uppercase().ifBlank { "—" },
-            color = Color.White.copy(alpha = 0.7f),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            letterSpacing = 1.5.sp,
-            modifier = Modifier.align(Alignment.TopStart)
+        // Gold chip graphic
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .offset(y = (-18).dp)
+                .size(width = 42.dp, height = 32.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(Color(0xFFFDE68A), Color(0xFFD4AF37))
+                    )
+                )
         )
 
-        // Masked card number
+        // Masked / revealed card number
         Text(
             text = displayNumber,
             color = Color.White,
-            fontSize = 18.sp,
+            fontFamily = VaultMonoFontFamily,
+            fontSize = 19.sp,
             fontWeight = FontWeight.Medium,
             letterSpacing = 2.sp,
             modifier = Modifier.align(Alignment.Center)
         )
 
-        // Expiry bottom-right
-        Text(
-            text = "${card.expiryMonth}/${card.expiryYear}",
-            color = Color.White,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.align(Alignment.BottomEnd)
+        // Contactless icon
+        Icon(
+            imageVector = Icons.Filled.Wifi,
+            contentDescription = null,
+            tint = Color.White.copy(alpha = 0.8f),
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .offset(y = (-18).dp)
+                .size(26.dp)
+                .rotate(90f)
         )
+
+        // Bottom row: VALID THRU
+        Column(modifier = Modifier.align(Alignment.BottomStart)) {
+            Text(
+                text = "VALID THRU",
+                color = Color.White.copy(alpha = 0.6f),
+                fontSize = 9.sp,
+                letterSpacing = 1.sp
+            )
+            Text(
+                text = "${card.expiryMonth}/${card.expiryYear}",
+                color = Color.White,
+                fontFamily = VaultMonoFontFamily,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
     }
 }
 
@@ -231,13 +269,7 @@ private fun CardDetailsSection(
     val clipboardManager = LocalClipboardManager.current
     val scope = rememberCoroutineScope()
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(vertical = 4.dp)
-    ) {
+    VaultCard {
         // Full card number — shares visibility state with the card visual above
         SensitiveDetailRow(
             label = "Card Number",
@@ -245,16 +277,11 @@ private fun CardDetailsSection(
             isVisible = cardNumberVisible,
             onToggle = onCardNumberToggle,
             onCopy = {
-                clipboardManager.setText(AnnotatedString(card.cardNumber.formatCardNumber()))
-                // CLAUDE.md §6: clear clipboard after 30 seconds
-                scope.launch {
-                    delay(30_000L)
-                    clipboardManager.setText(AnnotatedString(""))
-                }
+                copyWithAutoClear(clipboardManager, scope, card.cardNumber.formatCardNumber())
             }
         )
 
-        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+        HorizontalDivider(color = VaultSurfaceBorder)
 
         // CVV
         SensitiveDetailRow(
@@ -266,105 +293,14 @@ private fun CardDetailsSection(
 
         // Label (only if set)
         if (card.label.isNotBlank()) {
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-            DetailRow(label = "Label", value = card.label)
+            HorizontalDivider(color = VaultSurfaceBorder)
+            PlainDetailRow(label = "Label", value = card.label)
         }
 
         // Notes (only if set)
         if (card.notes.isNotBlank()) {
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-            DetailRow(label = "Notes", value = card.notes)
+            HorizontalDivider(color = VaultSurfaceBorder)
+            PlainDetailRow(label = "Notes", value = card.notes)
         }
-    }
-}
-
-@Composable
-private fun SensitiveDetailRow(
-    label: String,
-    visibleValue: String,
-    isVisible: Boolean,
-    onToggle: () -> Unit,
-    onCopy: (() -> Unit)? = null
-) {
-    var justCopied by remember { mutableStateOf(false) }
-    LaunchedEffect(justCopied) {
-        if (justCopied) {
-            delay(2_000L)
-            justCopied = false
-        }
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(0.35f)
-        )
-        Text(
-            text = if (isVisible) visibleValue else "•".repeat(visibleValue.replace(" ", "").length),
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-            letterSpacing = if (isVisible) 1.sp else 2.sp,
-            modifier = Modifier.weight(if (onCopy != null) 0.45f else 0.52f),
-            textAlign = TextAlign.Start
-        )
-        IconButton(
-            onClick = onToggle,
-            modifier = Modifier.size(32.dp)
-        ) {
-            Icon(
-                imageVector = if (isVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
-                contentDescription = if (isVisible) "Hide" else "Show",
-                modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        if (onCopy != null) {
-            IconButton(
-                onClick = {
-                    onCopy()
-                    justCopied = true
-                },
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = if (justCopied) Icons.Outlined.CheckCircle else Icons.Outlined.ContentCopy,
-                    contentDescription = if (justCopied) "Copied" else "Copy card number",
-                    modifier = Modifier.size(18.dp),
-                    tint = if (justCopied) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun DetailRow(label: String, value: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.Top
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(0.38f)
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(0.62f),
-            textAlign = TextAlign.Start
-        )
     }
 }
