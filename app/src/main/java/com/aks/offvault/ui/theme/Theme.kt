@@ -1,51 +1,38 @@
 package com.aks.offvault.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-private val DarkColorScheme = darkColorScheme(
-    primary = VaultAccentBlue,
-    onPrimary = Color(0xFF003549),
-    primaryContainer = Color(0xFF004D6F),
-    onPrimaryContainer = Color(0xFFBDE9FF),
-    background = VaultNavyDark,
-    onBackground = Color.White,
-    surface = VaultNavyMedium,
-    onSurface = Color.White,
-    surfaceVariant = VaultNavySurface,
-    onSurfaceVariant = VaultSubtitle,
-    outline = VaultHint
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF006494),
+// OffVault ships a single, deliberate OLED-dark aesthetic — a secure vault should look
+// and feel consistent regardless of the device's system theme or wallpaper.
+private val VaultDarkColorScheme = darkColorScheme(
+    primary = VaultPrimary,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFBDE9FF),
-    onPrimaryContainer = Color(0xFF001E2C),
-    background = Color(0xFFF6FAFE),
-    onBackground = Color(0xFF191C1E),
-    surface = Color(0xFFF6FAFE),
-    onSurface = Color(0xFF191C1E),
-    surfaceVariant = Color(0xFFDCE4EC),
-    onSurfaceVariant = Color(0xFF40484F),
-    outline = Color(0xFF70787F)
+    primaryContainer = VaultPrimarySoftFill,
+    onPrimaryContainer = VaultPrimary,
+    background = VaultBackground,
+    onBackground = VaultTextPrimary,
+    surface = VaultSurface,
+    onSurface = VaultTextPrimary,
+    surfaceVariant = VaultSurface,
+    onSurfaceVariant = VaultTextSecondary,
+    outline = VaultSurfaceBorder,
+    outlineVariant = VaultSurfaceBorder,
+    error = VaultDanger,
+    onError = Color.White
 )
 
 @Composable
 fun OffVaultTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    // Dynamic color deliberately disabled — vault requires a consistent secure aesthetic
-    // regardless of device wallpaper or system accent colour.
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
-
+    // Dynamic color and light mode are deliberately disabled — the vault always renders
+    // in the same OLED-dark design system regardless of device theme.
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = VaultDarkColorScheme,
         typography = Typography,
         content = content
     )

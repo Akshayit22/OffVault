@@ -1,6 +1,5 @@
 package com.aks.offvault.ui.others
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,11 +7,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
@@ -37,12 +34,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.aks.offvault.ui.components.IconTile
+import com.aks.offvault.ui.components.PlainDetailRow
+import com.aks.offvault.ui.components.VaultCard
 import com.aks.offvault.ui.theme.SectionOrange
+import com.aks.offvault.ui.theme.VaultBackground
+import com.aks.offvault.ui.theme.VaultTextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,13 +77,7 @@ fun ViewOtherScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        text = other?.title ?: "Entry",
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1
-                    )
-                },
+                title = { Text(text = other?.title ?: "Entry", fontWeight = FontWeight.Bold, maxLines = 1) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
@@ -101,12 +95,10 @@ fun ViewOtherScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = VaultBackground)
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = VaultBackground
     ) { innerPadding ->
         other?.let { o ->
             Column(
@@ -117,54 +109,25 @@ fun ViewOtherScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Header banner
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(SectionOrange.copy(alpha = 0.12f))
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            Icons.Outlined.Category,
-                            contentDescription = null,
-                            tint = SectionOrange,
-                            modifier = Modifier.size(48.dp)
-                        )
-                        Spacer(Modifier.height(8.dp))
+                VaultCard {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(20.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconTile(icon = Icons.Outlined.Category, tint = SectionOrange, size = 56.dp, iconSize = 28.dp)
+                        Spacer(Modifier.width(16.dp))
                         Text(
                             text = o.title,
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp,
-                            textAlign = TextAlign.Center
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
 
-                // Info card
                 if (o.info.isNotBlank()) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .padding(horizontal = 16.dp, vertical = 14.dp)
-                    ) {
-                        Text(
-                            text = "Info",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Spacer(Modifier.height(6.dp))
-                        Text(
-                            text = o.info,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            textAlign = TextAlign.Start
-                        )
+                    VaultCard {
+                        PlainDetailRow(label = "Info", value = o.info)
                     }
                 }
             }
@@ -174,7 +137,7 @@ fun ViewOtherScreen(
                 .padding(innerPadding),
             contentAlignment = Alignment.Center
         ) {
-            Text("Entry not found", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Entry not found", color = VaultTextSecondary)
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.aks.offvault.ui.logins
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,23 +15,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
 import androidx.compose.material.icons.outlined.VpnKey
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -43,14 +36,19 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.aks.offvault.data.model.LoginDetail
+import com.aks.offvault.ui.components.EmptyState
+import com.aks.offvault.ui.components.VaultCard
+import com.aks.offvault.ui.components.VaultFab
+import com.aks.offvault.ui.components.VaultSearchField
+import com.aks.offvault.ui.components.calculatePasswordStrength
 import com.aks.offvault.ui.theme.SectionPurple
+import com.aks.offvault.ui.theme.VaultBackground
+import com.aks.offvault.ui.theme.VaultTextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,7 +60,6 @@ fun LoginDetailListScreen(
 ) {
     val loginDetails by viewModel.loginDetails.collectAsState()
     var searchQuery by rememberSaveable { mutableStateOf("") }
-    val keyboardController = LocalSoftwareKeyboardController.current
 
     val filteredLogins = if (searchQuery.isBlank()) loginDetails else {
         val q = searchQuery.trim().lowercase()
@@ -82,70 +79,34 @@ fun LoginDetailListScreen(
                         Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = VaultBackground)
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddClick,
-                containerColor = SectionPurple,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = "Add login")
-            }
+            VaultFab(onClick = onAddClick, containerColor = SectionPurple, contentDescription = "Add login")
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = VaultBackground
     ) { innerPadding ->
         Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                placeholder = { Text("Search logins…", fontSize = 14.sp) },
-                leadingIcon = {
-                    Icon(Icons.Outlined.Search, contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(14.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = SectionPurple,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant
-                ),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            VaultSearchField(
+                query = searchQuery,
+                onQueryChange = { searchQuery = it },
+                placeholder = "Search logins…",
+                accentColor = SectionPurple,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
             )
 
             when {
-                loginDetails.isEmpty() -> Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(32.dp)
-                    ) {
-                        Icon(Icons.Outlined.VpnKey, contentDescription = null,
-                            tint = SectionPurple, modifier = Modifier.size(64.dp))
-                        Spacer(Modifier.height(4.dp))
-                        Text("No logins saved yet", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
-                        Text("Tap + to add your first login", fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+                loginDetails.isEmpty() -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    EmptyState(
+                        icon = Icons.Outlined.VpnKey,
+                        accentColor = SectionPurple,
+                        title = "No logins saved yet",
+                        subtitle = "Tap + to add your first login"
+                    )
                 }
-                filteredLogins.isEmpty() -> Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("No logins match \"$searchQuery\"",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                filteredLogins.isEmpty() -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No logins match \"$searchQuery\"", color = VaultTextSecondary)
                 }
                 else -> LazyColumn(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
@@ -162,25 +123,29 @@ fun LoginDetailListScreen(
 
 @Composable
 private fun LoginDetailListItem(login: LoginDetail, onClick: () -> Unit) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
+    val strength = calculatePasswordStrength(login.password)
+    val initial = login.title.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+
+    VaultCard(onClick = onClick) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                Icons.Outlined.VpnKey,
-                contentDescription = null,
-                tint = SectionPurple,
-                modifier = Modifier.size(32.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(46.dp)
+                    .background(SectionPurple.copy(alpha = 0.16f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = initial,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp,
+                    color = SectionPurple
+                )
+            }
 
             Spacer(Modifier.width(14.dp))
 
@@ -190,19 +155,37 @@ private fun LoginDetailListItem(login: LoginDetail, onClick: () -> Unit) {
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 15.sp,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 if (login.username.isNotBlank()) {
                     Spacer(Modifier.height(2.dp))
                     Text(
                         text = login.username,
                         fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = VaultTextSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
             }
+
+            Spacer(Modifier.width(8.dp))
+
+            Box(
+                modifier = Modifier
+                    .size(9.dp)
+                    .background(strength.color, CircleShape)
+            )
+
+            Spacer(Modifier.width(12.dp))
+
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.ArrowForwardIos,
+                contentDescription = null,
+                tint = VaultTextSecondary,
+                modifier = Modifier.size(14.dp)
+            )
         }
     }
 }

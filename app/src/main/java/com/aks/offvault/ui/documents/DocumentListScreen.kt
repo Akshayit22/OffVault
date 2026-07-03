@@ -15,22 +15,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -43,14 +34,20 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.aks.offvault.data.model.Document
+import com.aks.offvault.ui.components.IconTile
+import com.aks.offvault.ui.components.VaultCard
+import com.aks.offvault.ui.components.VaultFab
+import com.aks.offvault.ui.components.VaultPrimaryButton
+import com.aks.offvault.ui.components.VaultSearchField
 import com.aks.offvault.ui.theme.SectionTeal
+import com.aks.offvault.ui.theme.VaultBackground
+import com.aks.offvault.ui.theme.VaultTextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,7 +59,6 @@ fun DocumentListScreen(
 ) {
     val documents by viewModel.documents.collectAsState()
     var searchQuery by rememberSaveable { mutableStateOf("") }
-    val keyboardController = LocalSoftwareKeyboardController.current
 
     val filteredDocuments = if (searchQuery.isBlank()) documents else {
         val q = searchQuery.trim().lowercase()
@@ -82,70 +78,29 @@ fun DocumentListScreen(
                         Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = VaultBackground)
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddClick,
-                containerColor = SectionTeal,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = "Add document")
-            }
+            VaultFab(onClick = onAddClick, containerColor = SectionTeal, contentDescription = "Add document")
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = VaultBackground
     ) { innerPadding ->
         Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                placeholder = { Text("Search documents…", fontSize = 14.sp) },
-                leadingIcon = {
-                    Icon(Icons.Outlined.Search, contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(14.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = SectionTeal,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant
-                ),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            VaultSearchField(
+                query = searchQuery,
+                onQueryChange = { searchQuery = it },
+                placeholder = "Search documents…",
+                accentColor = SectionTeal,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
             )
 
             when {
-                documents.isEmpty() -> Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(32.dp)
-                    ) {
-                        Icon(Icons.Outlined.Description, contentDescription = null,
-                            tint = SectionTeal, modifier = Modifier.size(64.dp))
-                        Spacer(Modifier.height(4.dp))
-                        Text("No documents saved yet", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
-                        Text("Tap + to add your first document", fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+                documents.isEmpty() -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    DocumentsEmptyState(onAddClick = onAddClick)
                 }
-                filteredDocuments.isEmpty() -> Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("No documents match \"$searchQuery\"",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                filteredDocuments.isEmpty() -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No documents match \"$searchQuery\"", color = VaultTextSecondary)
                 }
                 else -> LazyColumn(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
@@ -161,26 +116,53 @@ fun DocumentListScreen(
 }
 
 @Composable
-private fun DocumentListItem(document: Document, onClick: () -> Unit) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+private fun DocumentsEmptyState(onAddClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.padding(32.dp)
     ) {
+        IconTile(
+            icon = Icons.Outlined.Description,
+            tint = SectionTeal,
+            size = 96.dp,
+            iconSize = 46.dp,
+            cornerRadius = 26.dp,
+            fillAlpha = 0.1f
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            "No documents yet",
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 19.sp,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            "Store IDs, passports, licences and more — all encrypted and offline.",
+            fontSize = 14.sp,
+            color = VaultTextSecondary,
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(10.dp))
+        VaultPrimaryButton(
+            text = "Add Document",
+            onClick = onAddClick,
+            containerColor = SectionTeal,
+            modifier = Modifier.width(200.dp)
+        )
+    }
+}
+
+@Composable
+private fun DocumentListItem(document: Document, onClick: () -> Unit) {
+    VaultCard(onClick = onClick) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                Icons.Outlined.Description,
-                contentDescription = null,
-                tint = SectionTeal,
-                modifier = Modifier.size(32.dp)
-            )
+            IconTile(icon = Icons.Outlined.Description, tint = SectionTeal, size = 48.dp, iconSize = 24.dp)
 
             Spacer(Modifier.width(14.dp))
 
@@ -190,14 +172,15 @@ private fun DocumentListItem(document: Document, onClick: () -> Unit) {
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 15.sp,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 if (document.documentId.isNotBlank()) {
                     Spacer(Modifier.height(2.dp))
                     Text(
                         text = document.documentId,
                         fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = VaultTextSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )

@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -25,12 +25,10 @@ import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material.icons.outlined.VpnKey
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -54,6 +52,18 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.aks.offvault.ui.components.IconTile
+import com.aks.offvault.ui.components.VaultCard
+import com.aks.offvault.ui.components.VaultOutlinedButton
+import com.aks.offvault.ui.components.VaultPrimaryButton
+import com.aks.offvault.ui.theme.SectionBlue
+import com.aks.offvault.ui.theme.SectionOrange
+import com.aks.offvault.ui.theme.SectionPurple
+import com.aks.offvault.ui.theme.SectionTeal
+import com.aks.offvault.ui.theme.VaultBackground
+import com.aks.offvault.ui.theme.VaultPrimary
+import com.aks.offvault.ui.theme.VaultSuccess
+import com.aks.offvault.ui.theme.VaultTextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -105,19 +115,17 @@ fun DataScreen(viewModel: DataViewModel, onBackClick: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Data") },
+                title = { Text("Data", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = VaultBackground)
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = VaultBackground
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -129,12 +137,12 @@ fun DataScreen(viewModel: DataViewModel, onBackClick: () -> Unit) {
         ) {
             Spacer(modifier = Modifier.height(4.dp))
 
-            // ── Stats ─────────────────────────────────────────────────────────
+            // ── Vault Summary — 2x2 stat cards ───────────────────────────────
             Text(
                 text = "Vault Summary",
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = VaultTextSecondary
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -143,12 +151,14 @@ fun DataScreen(viewModel: DataViewModel, onBackClick: () -> Unit) {
                 StatCard(
                     modifier = Modifier.weight(1f),
                     icon = Icons.Outlined.CreditCard,
+                    accentColor = SectionBlue,
                     label = "Cards",
                     count = stats.cardCount
                 )
                 StatCard(
                     modifier = Modifier.weight(1f),
                     icon = Icons.Outlined.Description,
+                    accentColor = SectionTeal,
                     label = "Documents",
                     count = stats.documentCount
                 )
@@ -160,12 +170,14 @@ fun DataScreen(viewModel: DataViewModel, onBackClick: () -> Unit) {
                 StatCard(
                     modifier = Modifier.weight(1f),
                     icon = Icons.Outlined.VpnKey,
+                    accentColor = SectionPurple,
                     label = "Logins",
                     count = stats.loginCount
                 )
                 StatCard(
                     modifier = Modifier.weight(1f),
                     icon = Icons.Outlined.Category,
+                    accentColor = SectionOrange,
                     label = "Others",
                     count = stats.otherCount
                 )
@@ -176,64 +188,56 @@ fun DataScreen(viewModel: DataViewModel, onBackClick: () -> Unit) {
                 text = "Backup & Restore",
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = VaultTextSecondary
             )
 
-            ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+            VaultCard {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
                         text = "Export Backup",
                         fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "Save an encrypted backup of all your vault data to a file.",
                         fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = VaultTextSecondary,
                         lineHeight = 18.sp
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    Button(
+                    VaultPrimaryButton(
+                        text = "Export Backup",
                         onClick = { showExportDialog = true },
+                        icon = Icons.Outlined.Upload,
                         modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(
-                            Icons.Outlined.Upload,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text("  Export Backup")
-                    }
+                    )
                 }
             }
 
-            ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+            VaultCard {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
                         text = "Import Backup",
                         fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "Restore your vault data from a previously exported backup file.",
                         fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = VaultTextSecondary,
                         lineHeight = 18.sp
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    OutlinedButton(
+                    VaultOutlinedButton(
+                        text = "Import Backup",
                         onClick = { importLauncher.launch(arrayOf("application/json", "*/*")) },
+                        icon = Icons.Outlined.Download,
                         modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(
-                            Icons.Outlined.Download,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text("  Import Backup")
-                    }
+                    )
                 }
             }
 
@@ -306,30 +310,29 @@ fun DataScreen(viewModel: DataViewModel, onBackClick: () -> Unit) {
 private fun StatCard(
     modifier: Modifier = Modifier,
     icon: ImageVector,
+    accentColor: androidx.compose.ui.graphics.Color,
     label: String,
     count: Int
 ) {
-    ElevatedCard(modifier = modifier) {
+    VaultCard(modifier = modifier) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(28.dp)
-            )
+            IconTile(icon = icon, tint = accentColor, size = 44.dp, iconSize = 22.dp, cornerRadius = 12.dp)
             Text(
                 text = count.toString(),
                 fontWeight = FontWeight.Bold,
-                fontSize = 26.sp
+                fontSize = 26.sp,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = label,
                 fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = VaultTextSecondary
             )
         }
     }

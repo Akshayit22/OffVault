@@ -1,5 +1,6 @@
 package com.aks.offvault.ui.cards
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,8 +18,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -26,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -49,7 +49,12 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.aks.offvault.data.model.Card
 import com.aks.offvault.data.model.CardType
+import com.aks.offvault.ui.components.VaultPrimaryButton
 import com.aks.offvault.ui.theme.SectionBlue
+import com.aks.offvault.ui.theme.VaultBackground
+import com.aks.offvault.ui.theme.VaultMonoFontFamily
+import com.aks.offvault.ui.theme.VaultSurfaceBorder
+import com.aks.offvault.ui.theme.VaultTextSecondary
 
 /** Displays raw digits as XXXX XXXX XXXX XXXX without altering the stored value. */
 private object CardNumberVisualTransformation : VisualTransformation {
@@ -74,6 +79,15 @@ private object CardNumberVisualTransformation : VisualTransformation {
         return TransformedText(AnnotatedString(formatted), offsetMapping)
     }
 }
+
+private val fieldColors
+    @Composable get() = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = SectionBlue,
+        unfocusedBorderColor = VaultSurfaceBorder,
+        focusedContainerColor = MaterialTheme.colorScheme.surface,
+        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+        cursorColor = SectionBlue
+    )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -132,29 +146,60 @@ fun AddEditCardScreen(
                         Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = VaultBackground)
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        bottomBar = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(VaultBackground)
+                    .imePadding()
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+            ) {
+                VaultPrimaryButton(
+                    text = if (isEditMode) "Save Changes" else "Add Card",
+                    enabled = isFormValid,
+                    containerColor = SectionBlue,
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        val card = Card(
+                            id = if (isEditMode) existingCard!!.id else 0,
+                            label = label.trim(),
+                            cardNumber = cardNumber,
+                            expiryMonth = expiryMonth,
+                            expiryYear = expiryYear,
+                            cardType = cardType,
+                            bankName = bankName.trim(),
+                            cvv = cvv,
+                            notes = notes.trim(),
+                            createdAt = if (isEditMode) existingCard!!.createdAt else System.currentTimeMillis(),
+                            updatedAt = System.currentTimeMillis()
+                        )
+                        if (isEditMode) viewModel.updateCard(card) else viewModel.insertCard(card)
+                        onSaved()
+                    }
+                )
+            }
+        },
+        containerColor = VaultBackground
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .imePadding()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Card type
+            // Card type — Debit / Credit segmented toggle
             SectionLabel("Card Type *")
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 FilterChip(
                     selected = cardType == CardType.DEBIT,
                     onClick = { cardType = CardType.DEBIT },
                     label = { Text("Debit") },
+                    shape = RoundedCornerShape(12.dp),
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = SectionBlue.copy(alpha = 0.2f),
                         selectedLabelColor = SectionBlue
@@ -164,6 +209,7 @@ fun AddEditCardScreen(
                     selected = cardType == CardType.CREDIT,
                     onClick = { cardType = CardType.CREDIT },
                     label = { Text("Credit") },
+                    shape = RoundedCornerShape(12.dp),
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = SectionBlue.copy(alpha = 0.2f),
                         selectedLabelColor = SectionBlue
@@ -171,21 +217,23 @@ fun AddEditCardScreen(
                 )
             }
 
-            // Card Number — stores raw digits, displays with spaces
+            // Card Number — stores raw digits, displays with spaces, mono font
             SectionLabel("Card Number *")
             OutlinedTextField(
                 value = cardNumber,
                 onValueChange = { if (it.length <= 16 && it.all { c -> c.isDigit() }) cardNumber = it },
                 placeholder = { Text("XXXX XXXX XXXX XXXX") },
+                textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = VaultMonoFontFamily),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 visualTransformation = CardNumberVisualTransformation,
                 singleLine = true,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = fieldColors,
                 modifier = Modifier.fillMaxWidth()
             )
 
             // Expiry
-            SectionLabel("Expiry Date *")
+            SectionLabel("Expiry Date (MM/YY) *")
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = expiryMonth,
@@ -193,7 +241,8 @@ fun AddEditCardScreen(
                     placeholder = { Text("MM") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = fieldColors,
                     modifier = Modifier.weight(1f)
                 )
                 OutlinedTextField(
@@ -202,7 +251,8 @@ fun AddEditCardScreen(
                     placeholder = { Text("YY") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = fieldColors,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -214,7 +264,8 @@ fun AddEditCardScreen(
                 onValueChange = { bankName = it },
                 placeholder = { Text("e.g. HDFC, Axis, SBI") },
                 singleLine = true,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = fieldColors,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -225,7 +276,8 @@ fun AddEditCardScreen(
                 onValueChange = { label = it },
                 placeholder = { Text("e.g. My HDFC Salary Card") },
                 singleLine = true,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = fieldColors,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -235,18 +287,21 @@ fun AddEditCardScreen(
                 value = cvv,
                 onValueChange = { if (it.length <= 3 && it.all { c -> c.isDigit() }) cvv = it },
                 placeholder = { Text("3-digit CVV") },
+                textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = VaultMonoFontFamily),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                 visualTransformation = if (cvvVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     IconButton(onClick = { cvvVisible = !cvvVisible }) {
                         Icon(
                             if (cvvVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
-                            contentDescription = if (cvvVisible) "Hide CVV" else "Show CVV"
+                            contentDescription = if (cvvVisible) "Hide CVV" else "Show CVV",
+                            tint = VaultTextSecondary
                         )
                     }
                 },
                 singleLine = true,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = fieldColors,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -258,44 +313,12 @@ fun AddEditCardScreen(
                 placeholder = { Text("Additional info (optional)") },
                 minLines = 3,
                 maxLines = 5,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = fieldColors,
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(Modifier.height(8.dp))
-
-            Button(
-                onClick = {
-                    val card = Card(
-                        id = if (isEditMode) existingCard!!.id else 0,
-                        label = label.trim(),
-                        cardNumber = cardNumber,
-                        expiryMonth = expiryMonth,
-                        expiryYear = expiryYear,
-                        cardType = cardType,
-                        bankName = bankName.trim(),
-                        cvv = cvv,
-                        notes = notes.trim(),
-                        createdAt = if (isEditMode) existingCard!!.createdAt else System.currentTimeMillis(),
-                        updatedAt = System.currentTimeMillis()
-                    )
-                    if (isEditMode) viewModel.updateCard(card) else viewModel.insertCard(card)
-                    onSaved()
-                },
-                enabled = isFormValid,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = SectionBlue)
-            ) {
-                Text(
-                    text = if (isEditMode) "Save Changes" else "Add Card",
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(88.dp))
         }
     }
 }
@@ -305,7 +328,7 @@ private fun SectionLabel(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = VaultTextSecondary,
         fontWeight = FontWeight.Medium
     )
 }
